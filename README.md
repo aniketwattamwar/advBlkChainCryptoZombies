@@ -37,12 +37,13 @@
 
 ## Improvements to the CryptoZombies DApp
 
-1. Customized Zombie names
-2. Prompt to name zombies
-3. Engaged in battles or attacks with zombies
-4. Integrated zombie images
-5. Enhanced user interface
-6. Manage the creation of multiple zombies
-7. Showcase powerful zombies
-8. Level up zombies
-9. Search for specific zombies
+1. The user interface (UI) of the DApp 
+2. Added images to demo zombies in a better way.
+3. Implemented a naming prompt upon zombie creation
+4. Introduce interactive zombie battles or attacks for thrilling gameplay
+5. Showcasing the most powerful or highest-level zombies 
+6. Incorporated a level up for the zombies
+7. Change name of zombie
+8. Change DNA of zombie
+9. Implemented a battle system where zombies can attack other zombies
+10. Able to create multiple zombies
