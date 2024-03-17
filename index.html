@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <meta charset="UTF-8">
+  <title>Zombie Factory</title>
+<link rel="icon" href="favicon.ico">
+  <script language="javascript" type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+  <script language="javascript" type="text/javascript" src="cryptozombies_abi.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#"> Zombie Factory</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="team.html">Team Unicorn </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/aniketwattamwar/advBlkChainCryptoZombies">Project Code</a>
+        </li>
+      </ul>
+    
+    </div>
+  </nav>
+  
+  
+  <div class="container">
+  
+      <div class="row">
+        <h1> Welcome to the Zombie Factory </h1>
+        
+        <div class="btn-group" >
+          <form id="searchForm">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Search for a zombie..." id="searchInput">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Search</button>
+              </div>
+            </div>
+          </form>
+
+          <button class="btn btn-success showZombieButton">Show Zombies</button>
+          <button class="btn btn-primary createzombieButton">Create Zombie</button>
+          <button class=" btn btn-info levelupButton">Level Up</button>
+          <button class=" btn btn-dark powersZombieBtn">Show most powerful</button>
+         <button class=" btn btn-danger attacksZombieBtn">Attack</button>  
+          <button class=" btn btn-secondary changeNameBtn">Change Name</button>
+          <button class=" btn btn-warning changeDnaBtn">Change Dna</button>
+           
+        </div>
+      </div>
+      <div id="txStatus"></div>
+         
+          <div id="zombies" class="row"></div>
+         
+    
+
+    <div id="allZombies"></div>
+   
+  </div>
+  <script>
+
+    var cryptoZombies;
+    var userAccount;
+    const showZombieButton = document.querySelector('.showZombieButton');
+    const createzombieButton = document.querySelector('.createzombieButton');
+    const levelupButton = document.querySelector('.levelupButton');
+    const powerZombie = document.querySelector('.powersZombieBtn');
+    const attacksZombie = document.querySelector('.attacksZombieBtn')
+    
+    const onchangeName = document.querySelector('.changeNameBtn')
+    const onchangeDna = document.querySelector('.changeDnaBtn')
+    
+
+    $("#searchForm").submit(function(event) {
+      event.preventDefault();  
+  
+      
+      const searchValue = $("#searchInput").val();
+      console.log("Search value:", searchValue);
+      searchAndDisplayZombie(searchValue)
+    });
+
+
+    function startApp() {
+	
+      //ZombieOwnership contract address
+      var cryptoZombiesAddress = "0x010E890B32d5aeB0C89F6932151B9397908fe829";
+       
+      cryptoZombies = new web3.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
+      console.log(cryptoZombies.methods)
+
+      cryptoZombies.events.Transfer({ filter: { _to: userAccount } })
+        .on("data", function (event) {
+          let data = event.returnValues;
+          getZombiesByOwner(userAccount).then(displayZombies);
+        }).on("error", console.error);
+    }
+
+
+        function searchAndDisplayZombie(searchName) {
+          $("#zombies").empty();  
+          $("#allZombies").empty();
+          
+          ids = ['0','1','2']
+          let zombieFound = false; 
+          console.log(ids)
+          for (let i = 0; i < ids.length; i++) {
+            let id = ids[i];
+            console.log(id)
+            let zombieImage = `zombie${i + 1}.png`;
+    
+            getZombieDetails(id)
+                .then(function(zombie) {
+                     
+                    if (zombie.name.includes(searchName)) {
+                        zombieFound = true; 
+    
+                         
+                        let card = $(`
+                            <div class="col-sm-4">
+                                <div class="card" style="width: 300px; margin: 10px;">
+                                    <img class="card-img-top" src="${zombieImage}" alt="Card image" style="width:100%">
+                                    <div class="card-body">
+                                        <h4 class="card-title">Zombie: ${zombie.name}</h4>
+                                        <h5 class="card-title">Level: ${zombie.level}</h5>
+                                        <p class="card-title">DNA: ${zombie.dna}</p>
+                                    </div>
+                                </div>
+                            </div>`
+                        );
+                        $("#zombies").append(card);
+                    }
+                    
+                  })
+                }
+                
+      }
+      
+      
+      
+
+    function displayZombies(ids) {
+      $("#zombies").empty();
+      $("#allZombies").empty();
+       
+       
+      for (let i = 0; i < ids.length; i++) {
+        console.log(ids)
+        let id = ids[i];
+        let zombieImage = `zombie${i + 1}.png`;
+        
+        getZombieDetails(id)
+          .then(function (zombie) {
+
+            let card = $(`
+            <div class="col-sm-4">
+              <div class="card" style="width: 300px; margin: 10px;">
+                <img class="card-img-top" src="${zombieImage}" alt="Card image" style="width:100%">
+                <div class="card-body">
+                    <h4 class="card-title">Zombie: ${zombie.name}</h4>
+                    <h5 class="card-title">Level: ${zombie.level}</h5>
+                    <p class="card-title">DNA: ${zombie.dna}</p>
+                    <p class="card-title">Wins: ${zombie.winCount}</p>
+                    <p class="card-title">losses: ${zombie.lossCount}</p>
+                     
+                </div>
+              </div>
+          </div>`
+          
+          );
+
+
+            $("#zombies").append(card);
+          });
+      }
+
+    }
+
+    function displayMostPowerfulZombie(ids) {
+      $("#zombies").empty();
+      $("#allZombies").empty();
+       
+      ids.sort((a, b) => b.level - a.level);
+      
+      const mostPowerfulZombieId = ids[0]; 
+      getZombieDetails(mostPowerfulZombieId)
+        .then(function(zombie) {
+          $("#allZombies").append(`
+          <div class="zombie">
+            <ul class="list-group">
+              <li class="list-group-item">Name: ${zombie.name}</li>
+              <li class="list-group-item">DNA: ${zombie.dna}</li>
+              <li class="list-group-item">Level: ${zombie.level}</li>
+              <li class="list-group-item">Wins: ${zombie.winCount}</li>
+              <li class="list-group-item">Losses: ${zombie.lossCount}</li>
+              <li class="list-group-item">Ready Time: ${zombie.readyTime}</li>
+            </ul>
+          </div>`);
+        });
+    }
+
+
+    function createRandomZombie(name) {
+      $("#txStatus").text("Creating new zombie on the blockchain. This may take a while...");
+
+      return cryptoZombies.methods.createRandomZombie(name)
+        .send({ from: userAccount })
+        .on("receipt", function (receipt) {
+          $("#txStatus").text("Successfully created a Zombie named " + name);
+          
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function (error) {
+
+          $("#txStatus").text(error);
+        });
+    }
+    
+     async function attackZombies(ids){
+       $("#txStatus").text("Attacking");
+       const zombieId = ids[0]; 
+       const targetId = ids[1];
+      return cryptoZombies.methods.attack(zombieId, targetId)
+        .send({ from: userAccount })
+        .on("receipt", function (receipt) {
+          $("#txStatus").text("Attacked!");
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function (error) {
+          $("#txStatus").text(error);
+        });
+        
+       
+    }
+
+    async function handleCreateZombieClick() {
+      const name = prompt('Enter a name for your new zombie:');
+    
+      if (name) {
+        try {
+          await createRandomZombie(name);
+        } catch (error) {
+          console.error('Error creating zombie:', error);
+        }
+      }
+    }
+    
+    async function changeDnaOne(ids) {
+      $("#txStatus").text("changing dna of  your zombie...");
+      const newDna = 3258991264542247
+      const zombieId = ids[0]; 
+      console.log(zombieId)
+        
+      return cryptoZombies.methods.changeDna(zombieId,newDna)
+        .send({ from: userAccount })
+        .on("receipt", function (receipt) {
+          $("#txStatus").text(" successfully changed dna");
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function (error) {
+          $("#txStatus").text(error);
+        });
+    }
+
+    async function changeNameOne(ids) {
+      $("#txStatus").text("changing dna of  your zombie...");
+      const newName = "James"
+      const zombieId = ids[0]; 
+      console.log(zombieId)
+        
+      return cryptoZombies.methods.changeName(zombieId,newName)
+        .send({ from: userAccount })
+        .on("receipt", function (receipt) {
+          $("#txStatus").text(" successfully changed Name");
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function (error) {
+          $("#txStatus").text(error);
+        });
+    }
+
+
+    async function feedOnKitty(zombieId, kittyId) {
+      $("#txStatus").text("Eating a kitty. This may take a while...");
+      return cryptoZombies.methods.feedOnKitty(zombieId, kittyId)
+        .send({ from: userAccount })
+        .on("receipt", function (receipt) {
+          $("#txStatus").text("Ate a kitty and spawned a new Zombie!");
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function (error) {
+          $("#txStatus").text(error);
+        });
+    }
+
+    function levelUp(zombieId) {
+      $("#txStatus").text("Leveling up your zombie...");
+      return cryptoZombies.methods.levelUp(zombieId)
+        .send({ from: userAccount, value: web3.utils.toWei("0.001", "ether") })
+        .on("receipt", function (receipt) {
+          $("#txStatus").text("Power overwhelming! Zombie successfully leveled up");
+        })
+        .on("error", function (error) {
+          $("#txStatus").text(error);
+        });
+    }
+
+    function getZombieDetails(id) {
+      return cryptoZombies.methods.zombies(id).call()
+    }
+
+    function zombieToOwner(id) {
+      return cryptoZombies.methods.zombieToOwner(id).call()
+    }
+
+    function getZombiesByOwner(owner) {
+      return cryptoZombies.methods.getZombiesByOwner(owner).call()
+    }
+
+    window.addEventListener('load', async () => {
+    // Modern dapp browsers...
+    if (window.ethereum) {
+        window.web3 = new Web3(ethereum);
+        try {
+            // Request account access if needed
+            const accounts = await ethereum.enable();
+            // Acccounts now exposed
+            userAccount = accounts[0];
+            startApp()
+        } catch (error) {
+            // User denied account access...
+        }
+    }
+    // Legacy dapp browsers...
+    else if (window.web3) {
+        window.web3 = new Web3(web3.currentProvider);
+        // Acccounts always exposed
+        userAccount = web3.eth.accounts[0];
+        startApp()
+    }
+    // Non-dapp browsers...
+    else {
+        console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
+    }
+   });
+ 
+   //the following code from Lesson 6, chapter 2 is obsolete
+   //metamask no longer inject web3 since early 2021
+   //window.addEventListener('load', function () {
+
+  //    if (typeof web3 !== 'undefined') {
+   //     web3js = new Web3(web3.currentProvider);
+   //   } else {
+
+    //  }
+
+
+    //  startApp()
+
+  //  }) 
+
+   ethereum.on('accountsChanged', (accounts) => {
+       window.location.reload();
+   });
+
+   ethereum.on('chainChanged', (chainId) => {
+       window.location.reload(); 
+   });  
+
+ /*
+    createzombieButton.addEventListener('click', () => {
+      createRandomZombie(userAccount);
+
+    });
+*/
+createzombieButton.addEventListener('click', handleCreateZombieClick)
+
+    showZombieButton.addEventListener('click', () => {
+      getZombiesByOwner(userAccount)
+            .then(displayZombies);
+
+    });
+
+    levelupButton.addEventListener('click', () => {
+      getZombiesByOwner(userAccount)
+            .then(levelUp);
+
+    });
+
+   
+    powerZombie.addEventListener('click', () => {
+      getZombiesByOwner(userAccount)
+            .then(displayMostPowerfulZombie)
+
+    });
+
+    attacksZombie.addEventListener('click',()=>{
+      getZombiesByOwner(userAccount)
+      .then(attackZombies)
+      
+    })
+
+    onchangeName.addEventListener('click',()=>{
+      getZombiesByOwner(userAccount)
+      .then(changeNameOne)
+       
+      
+    })
+
+    onchangeDna.addEventListener('click',()=>{
+      getZombiesByOwner(userAccount)
+      .then(changeDnaOne)
+       
+      
+    })
+
+    function generateRandomUint256() {
+      // Math.random() generates a random number between 0 (inclusive) and 1 (exclusive)
+      // We multiply Math.random() by Number.MAX_SAFE_INTEGER to ensure compatibility with the uint256 range
+      return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+  }
+  
+  // Example usage
+  const randomValue = generateRandomUint256();
+  console.log(randomValue);
+
+
+
+
+  </script>
+</body>
+
+</html>
