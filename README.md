@@ -2,7 +2,7 @@
 
 # Project Repository
 
-[Repository Link] (https://github.com/aniketwattamwar/advBlkChainCryptoZombies)
+[Repository Link](https://github.com/aniketwattamwar/advBlkChainCryptoZombies)
 
 ## Group Members:
 
